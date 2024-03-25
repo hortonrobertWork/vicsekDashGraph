@@ -1,7 +1,6 @@
 from dash import Dash, html, dcc, Input, Output, callback
 import pandas as pd
 import plotly.express as px
-import glob as glob
 import base64
 
 from PIL import Image
