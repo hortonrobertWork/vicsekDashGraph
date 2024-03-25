@@ -1,0 +1,7 @@
+dash
+pandas
+plotly
+glob
+base64
+PIL
+gunicorn
