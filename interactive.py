@@ -8,7 +8,9 @@ from PIL import Image
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
+
 server = app.server
+
 def encode_image(image_path):
     with open(image_path, "rb") as f:
         encoded_image = base64.b64encode(f.read()).decode()
