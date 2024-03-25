@@ -1,13 +1,12 @@
-from dash import Dash, html, dcc, Input, Output, callback
+from dash import dash, html, dcc, Input, Output, callback
 import pandas as pd
 import plotly.express as px
 import base64
-
 from PIL import Image
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
