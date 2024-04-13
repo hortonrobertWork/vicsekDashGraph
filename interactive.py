@@ -1,6 +1,7 @@
 from dash import dash, html, dcc, Input, Output, callback
 import pandas as pd
 import plotly.express as px
+import json
 
 import base64
 from PIL import Image
@@ -17,7 +18,7 @@ def encode_image(image_path):
     return f"data:image/jpeg;base64,{encoded_image}"
 
 
-df = pd.read_csv('data/combinedData/averagedObservables2.csv')
+df = pd.read_csv('data/combinedData/averagedObservables.csv')
 df['Delay']= df['Delay'].astype(str)
 
 app.layout = html.Div(
@@ -26,18 +27,6 @@ app.layout = html.Div(
                 children=[
                     html.H4("Delayed Vicsek Model"),
                 ],
-            ),
-            html.Div(
-                children=[
-                html.P('Selected Delay Amount'),
-                 dcc.Checklist(                 
-                     options=df['Delay'].unique(),
-                     value=[0,1,3,5],
-                     id='selectedDelays',
-                     inline=True
-                    ),
-                     
-                ], style={'width': '49%', 'display': 'inline-block'}
             ),
              html.Div(
                  children=[
@@ -57,8 +46,8 @@ app.layout = html.Div(
                     id="orderParameter",
                     figure=px.scatter(df,
                                       x='Noise', 
-                                      y='Average Polar Orderparameter', 
-                                      color='Delay' ,hover_data={'Custom': True})
+                                      y='Average Polar Orderparameter'
+                                      )
 
                 ),
                 )
@@ -73,7 +62,16 @@ app.layout = html.Div(
             children=[
                 html.Img(id="timeSeries", src=encode_image('data/outputImages/timeSeries/delay_0/delayTime=0_noiseStrength=0.4000.png'))    
             ], style={"width": "50%", "float": "left"}
-        )
+        ),
+        html.Div([
+            dcc.Markdown("""
+                **Click Data**
+
+                Click on points in the graph.
+            """),
+            html.Pre(id='test'),
+        ], className='three columns'),
+       
 ]
 )
 
@@ -82,20 +80,13 @@ app.layout = html.Div(
 
 @callback(
     Output("orderParameter", "figure"),
-    Input("selectedDelays", "value"),
     Input("selectedAverageObservable", "value"),
     )
-def update_graph(selectedDelay, selectedAverageObservable):
-    if selectedDelay is None:
-        selectedDelay = 0
-        figure = px.scatter(df, x=df['Noise'],
-                y=df[selectedAverageObservable],color=df['Delay'], hover_data={'Custom': True})
+def update_graph( selectedAverageObservable):
     
-    else:
-        filtered_df = df[df['Delay'].isin(selectedDelay)]
-        figure = px.scatter(filtered_df, x=filtered_df['Noise'],
-                y=filtered_df[selectedAverageObservable], delay=df['Delay'], hover_data={'Custom': True})
-    
+    figure = px.scatter(df, x=df['Noise'],
+                y=df[selectedAverageObservable], hover_data='Delay')
+
     return figure
 
 
@@ -108,9 +99,8 @@ def update_graph(selectedDelay, selectedAverageObservable):
 def display_click_data(clickData):
     global df
     if clickData:
-        pointNumber=clickData['points'][0]['pointIndex']
-        original_index = df.loc[pointNumber, 'OriginalIndex']
-        snapshotPath = df.loc[original_index,'snapshotPath'] # Replace with your logic
+        pointNumber=clickData['points'][0]['pointNumber']
+        snapshotPath = df.loc[pointNumber,'snapshotPath'] # Replace with your logic
     else:
         snapshotPath = "data/outputImages/snapshots/delay_0/delayTime=0_noiseStrength=0.4000.png"  # Set to empty string if no value
 
@@ -121,16 +111,20 @@ def display_click_data(clickData):
     Input('orderParameter', 'clickData')
 )
 def update_timeseries_fig(clickData):
-    global df
     if clickData:
-        pointNumber=clickData['points'][0]['pointIndex']
-        original_index = df.loc[pointNumber, 'OriginalIndex']
+        pointNumber=clickData['points'][0]['pointNumber']
 
-        snapshotPath = df.loc[original_index,'timeseriesPath'] 
+        snapshotPath = df.loc[pointNumber,'timeseriesPath'] 
     else:
         snapshotPath = "data/outputImages/timeSeries/delay_0/delayTime=0_noiseStrength=0.4000.png"  # Set to empty string if no value
 
     return encode_image(snapshotPath)
+@callback(
+    Output('test','children'),
+    Input('orderParameter', 'clickData')
+)
+def testFunction(clickData):
+    return json.dumps(clickData, indent=2)
 
 if __name__ == '__main__':
     app.run(debug=True,port=8080)
